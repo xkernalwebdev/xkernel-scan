@@ -1,0 +1,383 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Fira+Code:wght@400;500&display=swap');
+
+:root {
+  color-scheme: dark;
+  /* Palette extracted from your image */
+  --bg-deep: #020614;
+  --bg-card: rgba(10, 15, 28, 0.7);
+  --accent-cyan: #00E5FF;
+  --accent-cyan-glow: rgba(0, 229, 255, 0.3);
+  --text-main: #F8FAFC;
+  --text-sub: #8C9BAB;
+
+  /* Terminal dots */
+  --term-red: #FF5F56;
+  --term-yellow: #FFBD2E;
+  --term-green: #27C93F;
+
+  /* Status colors */
+  --danger: #FF5F56;
+  --warn: #FFBD2E;
+  --success: #27C93F;
+  --idle: #8C9BAB;
+
+  --border-subtle: rgba(0, 229, 255, 0.15);
+  --border-strong: rgba(0, 229, 255, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--bg-deep);
+  /* Faint blueprint grid background from your image */
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 30px 30px;
+  color: var(--text-main);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 12px;
+  max-width: 600px;
+  margin: 0 auto; /* Centers on tablets/desktop while filling phones */
+}
+
+/* --- HEADER --- */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.app-logo {
+  font-family: 'Fira Code', monospace;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--bg-deep);
+  background: var(--accent-cyan);
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 0 15px var(--accent-cyan-glow);
+}
+
+.app-title-main {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.app-title-sub {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  color: var(--accent-cyan);
+}
+
+.app-main {
+  flex: 1;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* --- CARDS (Terminal Style) --- */
+.card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  padding: 16px;
+  backdrop-filter: blur(10px);
+  position: relative;
+}
+
+/* Terminal Window Header Dots */
+.card::before {
+  content: '';
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--term-red);
+  box-shadow: 16px 0 0 var(--term-yellow), 32px 0 0 var(--term-green);
+  margin-bottom: 16px;
+}
+
+.scanner-header::before, .table-card::before {
+  display: none; /* Hide dots on specific cards if it gets too cluttered */
+}
+
+/* --- SCANNER SPECIFIC --- */
+.scanner-title {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.scanner-sub {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin-top: 4px;
+}
+
+.reader-shell {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 0 20px var(--accent-cyan-glow);
+  position: relative;
+}
+
+/* HUD Overlay effect for camera */
+.reader-shell::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border: 2px dashed rgba(0, 229, 255, 0.2);
+  pointer-events: none;
+  z-index: 10;
+}
+
+#reader {
+  width: 100%;
+  min-height: 280px;
+}
+
+/* --- STATUS PILLS --- */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  width: 100%;
+  justify-content: center;
+  border: 1px solid transparent;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.status-idle {
+  background: rgba(140, 155, 171, 0.1);
+  border-color: rgba(140, 155, 171, 0.3);
+  color: var(--idle);
+}
+.status-idle .status-dot { background: var(--idle); }
+
+.status-valid {
+  background: rgba(39, 201, 63, 0.1);
+  border-color: rgba(39, 201, 63, 0.3);
+  color: var(--success);
+}
+.status-valid .status-dot { background: var(--success); }
+
+.status-used {
+  background: rgba(255, 189, 46, 0.1);
+  border-color: rgba(255, 189, 46, 0.3);
+  color: var(--warn);
+}
+.status-used .status-dot { background: var(--warn); }
+
+.status-invalid {
+  background: rgba(255, 95, 86, 0.1);
+  border-color: rgba(255, 95, 86, 0.3);
+  color: var(--danger);
+}
+.status-invalid .status-dot { background: var(--danger); }
+
+/* --- DETAILS GRID --- */
+.detail-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.detail-item {
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border-left: 3px solid var(--accent-cyan);
+}
+
+.detail-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  color: var(--text-sub);
+  margin-bottom: 4px;
+}
+
+.detail-value {
+  font-size: 15px;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+/* --- BUTTONS --- */
+.btn-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn {
+  border: none;
+  outline: none;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--accent-cyan);
+  color: #000000;
+  box-shadow: 0 4px 15px var(--accent-cyan-glow);
+}
+
+.btn-primary:disabled {
+  background: rgba(0, 229, 255, 0.2);
+  color: rgba(255, 255, 255, 0.3);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--text-sub);
+}
+
+.btn-secondary {
+  background: rgba(0, 229, 255, 0.05);
+  color: var(--accent-cyan);
+  border: 1px solid var(--border-strong);
+}
+
+/* --- SEARCH & TABLES --- */
+.search-input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--text-main);
+  font-size: 15px;
+  font-family: 'Fira Code', monospace;
+}
+.search-input:focus {
+  outline: none;
+  box-shadow: 0 0 10px var(--accent-cyan-glow);
+}
+.search-input::placeholder {
+  color: var(--text-sub);
+}
+
+.table-card {
+  overflow-x: auto;
+  padding: 0; /* Remove padding for flush table edges */
+}
+
+.students-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 600px; /* Forces scroll on small screens */
+}
+
+.students-table th,
+.students-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+}
+
+.students-table th {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  color: var(--accent-cyan);
+  background: rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: 'Fira Code', monospace;
+  font-weight: 600;
+}
+
+.badge-attended {
+  background: rgba(39, 201, 63, 0.15);
+  color: var(--success);
+  border: 1px solid rgba(39, 201, 63, 0.3);
+}
+
+.badge-not {
+  background: rgba(140, 155, 171, 0.1);
+  color: var(--idle);
+  border: 1px solid rgba(140, 155, 171, 0.3);
+}
+
+/* Footer */
+.app-footer {
+  margin-top: auto;
+  padding: 20px 0 10px;
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  color: var(--text-sub);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.app-footer .dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+}

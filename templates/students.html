@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Students • X-Kernel Attendance{% endblock %}
+{% block content %}
+<section class="card" style="margin-bottom: 0;">
+  <div class="scanner-title">Mainframe Database</div>
+  <div class="scanner-sub">Live registry of all technical event participants.</div>
+
+  <div style="margin-top: 16px;">
+    <input
+      id="student-search"
+      type="text"
+      placeholder="> grep search_term..."
+      class="search-input"
+    />
+  </div>
+</section>
+
+<section class="card table-card">
+  <table class="students-table" id="students-table">
+    <thead>
+      <tr>
+        <th>Roll</th>
+        <th>Name</th>
+        <th>Branch</th>
+        <th>Ticket ID</th>
+        <th>Event</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in students %}
+      <tr>
+        <td style="font-family: 'Fira Code', monospace;">{{ s.roll_number }}</td>
+        <td style="font-weight: 500;">{{ s.name }}</td>
+        <td>{{ s.branch or '-' }} ({{ s.year or '-' }})</td>
+        <td style="font-family: 'Fira Code', monospace; color: var(--text-sub);">{{ s.ticket_id }}</td>
+        <td>{{ s.event }}</td>
+        <td>
+          {% if s.used %}
+          <span class="badge badge-attended">GRANTED</span>
+          <div style="font-size: 10px; color: var(--text-sub); margin-top: 4px; font-family: 'Fira Code', monospace;">
+             {{ s.scanned_at }}
+          </div>
+          {% else %}
+          <span class="badge badge-not">PENDING</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <button class="btn btn-secondary" style="width: 100%;" onclick="window.location.href='{{ url_for('scanner') }}'">
+    ← Return to Scanner
+  </button>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const input = document.getElementById("student-search");
+    const table = document.getElementById("students-table");
+    const rows = Array.from(table.querySelectorAll("tbody tr"));
+
+    input.addEventListener("input", () => {
+      const q = input.value.toLowerCase().trim();
+
+      rows.forEach((row) => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(q) ? "" : "none";
+      });
+    });
+  });
+</script>
+{% endblock %}

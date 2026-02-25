@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}X-Kernel Attendance{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="app-logo">&lt;/&gt;</div>
+      <div class="app-title">
+        <div class="app-title-main">X-Kernel</div>
+        <div class="app-title-sub">MAINFRAME // V2.0 ONLINE</div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="app-footer">
+      <span>© 2026 X-KERNEL</span>
+      <span class="dot"></span>
+      <span>SYSTEM ACTIVE</span>
+    </footer>
+  </div>
+</body>
+</html>

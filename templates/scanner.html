@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}Scanner • Ticket Check{% endblock %}
+{% block head_extra %}
+<script src="https://unpkg.com/html5-qrcode" defer></script>
+<script defer>
+  // ... [KEEP YOUR EXACT JAVASCRIPT CODE HERE - DO NOT CHANGE IT] ...
+  document.addEventListener("DOMContentLoaded", () => {
+    const statusPill = document.getElementById("status-pill");
+    const statusText = document.getElementById("status-text");
+    const nameEl = document.getElementById("s-name");
+    const eventEl = document.getElementById("s-event");
+    const infoEl = document.getElementById("s-info");
+    const resetBtn = document.getElementById("btn-reset");
+    const proceedBtn = document.getElementById("btn-proceed");
+
+    let lastScanRaw = null;
+    let currentTicketId = null;
+
+    function setStatus(kind, message) {
+      statusPill.className = "status-pill status-" + kind;
+      statusText.textContent = message;
+    }
+
+    function setDetails(ticket, extra) {
+      if (ticket) {
+        nameEl.textContent = ticket.name || "—";
+        eventEl.textContent = ticket.event || "—";
+      } else {
+        nameEl.textContent = "—";
+        eventEl.textContent = "—";
+      }
+      infoEl.textContent = extra || "Awaiting scan...";
+    }
+
+    function resetState() {
+      lastScanRaw = null;
+      currentTicketId = null;
+      setStatus("idle", "SYSTEM READY: AWAITING SCAN");
+      setDetails(null, "Point camera at a ticket QR.");
+      proceedBtn.disabled = true;
+    }
+
+    resetBtn.addEventListener("click", () => resetState());
+
+    function handleScan(decodedText) {
+      if (!decodedText) return;
+      if (decodedText === lastScanRaw) return;
+      lastScanRaw = decodedText;
+
+      setStatus("idle", "VERIFYING TICKET...");
+      setDetails(null, "Querying mainframe...");
+      proceedBtn.disabled = true;
+
+      fetch("/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticket_data: decodedText }),
+      })
+        .then((r) => r.json().then((d) => ({ ok: r.ok, data: d })))
+        .then(({ ok, data }) => {
+          if (!ok || !data.ok) {
+            setStatus("invalid", "ACCESS DENIED");
+            setDetails(null, data.message || "Invalid ticket");
+            currentTicketId = null;
+            proceedBtn.disabled = true;
+            return;
+          }
+
+          currentTicketId = data.ticket_id;
+
+          if (data.used) {
+            setStatus("used", "TICKET ALREADY USED");
+            setDetails(
+              { name: data.name, event: data.event },
+              data.scanned_at ? `Used at: ${data.scanned_at}` : "Already scanned into mainframe."
+            );
+            proceedBtn.disabled = true;
+          } else {
+            setStatus("valid", "ACCESS GRANTED");
+            setDetails(
+              { name: data.name, event: data.event },
+              "Tap Proceed to finalize entry."
+            );
+            proceedBtn.disabled = false;
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          setStatus("invalid", "CONNECTION ERROR");
+          setDetails(null, "Check network / try again.");
+          currentTicketId = null;
+          proceedBtn.disabled = true;
+        });
+    }
+
+    proceedBtn.addEventListener("click", () => {
+      if (!currentTicketId) return;
+
+      proceedBtn.disabled = true;
+      setStatus("idle", "UPDATING MAINFRAME...");
+      infoEl.textContent = "Please wait...";
+
+      fetch("/proceed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticket_id: currentTicketId }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (!data.ok) {
+            setStatus("invalid", "ERROR");
+            setDetails(null, data.message || "Error.");
+            return;
+          }
+
+          if (data.status === "marked") {
+            setStatus("valid", "ENTRY CONFIRMED");
+            setDetails(
+              { name: data.name, event: data.event },
+              data.scanned_at ? `Marked used at: ${data.scanned_at}` : "Marked used."
+            );
+          } else if (data.status === "already_used") {
+            setStatus("used", "ALREADY USED");
+            setDetails(
+              { name: data.name, event: data.event },
+              data.scanned_at ? `Already used at: ${data.scanned_at}` : "Already used."
+            );
+          } else {
+            setStatus("invalid", "ERROR");
+            setDetails(null, data.message || "Error.");
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          setStatus("invalid", "CONNECTION ERROR");
+          setDetails(null, "Check network / try again.");
+        })
+        .finally(() => {
+          proceedBtn.disabled = true;
+        });
+    });
+
+    function onScanSuccess(decodedText, decodedResult) {
+      handleScan(decodedText);
+    }
+
+    function onScanFailure(error) {
+      // ignore noisy errors
+    }
+
+    function startScanner() {
+      const html5QrCode = new Html5Qrcode("reader");
+      const config = { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1 };
+      html5QrCode
+        .start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
+        .catch((err) => {
+          console.error(err);
+          setStatus("invalid", "CAMERA OFFLINE");
+          setDetails(null, "Check browser permissions.");
+        });
+    }
+
+    resetState();
+
+    if (window.Html5Qrcode) {
+      startScanner();
+    } else {
+      setTimeout(() => {
+        if (window.Html5Qrcode) {
+          startScanner();
+        } else {
+          setStatus("invalid", "LIBRARY ERROR");
+          setDetails(null, "Failed to load scanner.");
+        }
+      }, 600);
+    }
+  });
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="card scanner-header" style="background: transparent; border: none; box-shadow: none; padding: 0;">
+  <div class="scanner-title">Gateway Scanner</div>
+  <div class="scanner-sub">Align the QR code within the target frame.</div>
+</section>
+
+<section class="reader-shell">
+  <div id="reader"></div>
+</section>
+
+<section class="card">
+  <div id="status-pill" class="status-pill status-idle">
+    <span class="status-dot"></span>
+    <span id="status-text">SYSTEM READY: AWAITING SCAN</span>
+  </div>
+
+  <div class="detail-grid">
+    <div class="detail-item">
+      <div class="detail-label">STUDENT NAME</div>
+      <div class="detail-value" id="s-name">—</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">EVENT</div>
+      <div class="detail-value" id="s-event">—</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">SYSTEM MESSAGE</div>
+      <div class="detail-value" id="s-info" style="color: var(--accent-cyan); font-family: 'Fira Code', monospace; font-size: 13px;">Awaiting scan...</div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button id="btn-proceed" class="btn btn-primary" disabled>
+      Finalize Entry ➔
+    </button>
+    <button id="btn-reset" class="btn btn-ghost">Reset Scanner</button>
+    <button class="btn btn-secondary" onclick="window.location.href='{{ url_for('students_page') }}'">
+      View Database
+    </button>
+  </div>
+</section>
+{% endblock %}
